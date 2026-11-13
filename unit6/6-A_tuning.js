@@ -7,9 +7,10 @@ const CONFIG = {
   GRAVITY: 2000,
   JUMP_SPEED: 700,
   MOVE_SPEED: 240,
+  DASH_SPEED: 1.8,
   MAX_JUMPS: 2,
   FALL_GRAVITY_RATE: 2,
-  HIP_DROP_GRAVITY_RATE: 10, // ヒップドロップ時の重力倍率
+  HIP_DROP_GRAVITY_RATE: 10,
 };
 
 const TARGET_HEIGHT = 64;
@@ -31,7 +32,6 @@ const keys = {};
 document.addEventListener("keydown", (e) => {
   keys[e.code] = true;
 
-  // 跳べる回数が残っていれば跳ぶ（空中でも）
   if (e.code === "Space" && player.jumpsLeft > 0) {
     player.vy = -CONFIG.JUMP_SPEED;
     player.jumpsLeft = player.jumpsLeft - 1;
@@ -54,22 +54,26 @@ function collideWithFloor() {
 }
 
 function update(dt) {
+  // Shiftキーを押している間はダッシュ
+  const speed = keys["ShiftLeft"] || keys["ShiftRight"]
+    ? CONFIG.MOVE_SPEED * CONFIG.DASH_SPEED
+    : CONFIG.MOVE_SPEED;
+
   if (keys["ArrowRight"]) {
-    player.x = player.x + CONFIG.MOVE_SPEED * dt;
+    player.x = player.x + speed * dt;
   }
   if (keys["ArrowLeft"]) {
-    player.x = player.x - CONFIG.MOVE_SPEED * dt;
+    player.x = player.x - speed * dt;
   }
 
   // 重力の計算
   let g = CONFIG.GRAVITY;
 
-  // 落下中なら重力を強くする
   if (player.vy > 0) {
     g = CONFIG.GRAVITY * CONFIG.FALL_GRAVITY_RATE;
   }
 
-  // 下矢印キーを押している間はヒップドロップ
+  // ヒップドロップ
   if (keys["ArrowDown"] && player.vy > 0) {
     g = CONFIG.GRAVITY * CONFIG.HIP_DROP_GRAVITY_RATE;
   }
@@ -85,7 +89,6 @@ function draw() {
   ctx.fillStyle = "#203060";
   ctx.fillRect(floor.x, floor.y, floor.w, floor.h);
 
-  // 目印の線
   ctx.fillStyle = "#ff6b6b";
   ctx.fillRect(0, floor.y - TARGET_HEIGHT, canvas.width, 2);
 
@@ -94,15 +97,19 @@ function draw() {
 
   ctx.fillStyle = "#e8eeff";
   ctx.font = "14px monospace";
+
   ctx.fillText(
     "vy = " + player.vy.toFixed(0) +
     "   jumpsLeft = " + player.jumpsLeft,
     10, 20
   );
 
-  // ヒップドロップ中の表示
   if (keys["ArrowDown"] && player.vy > 0) {
     ctx.fillText("HIP DROP!", 10, 40);
+  }
+
+  if (keys["ShiftLeft"] || keys["ShiftRight"]) {
+    ctx.fillText("DASH!", 10, 60);
   }
 }
 
