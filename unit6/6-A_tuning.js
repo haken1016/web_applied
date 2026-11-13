@@ -1,3 +1,4 @@
+
 const canvas = document.getElementById("stage");
 const ctx = canvas.getContext("2d");
 
@@ -8,22 +9,35 @@ const CONFIG = {
   MOVE_SPEED: 240,
   MAX_JUMPS: 2,
   FALL_GRAVITY_RATE: 2,
+  HIP_DROP_GRAVITY_RATE: 10, // ヒップドロップ時の重力倍率
 };
 
-const TARGET_HEIGHT = 64;   // 目印の線の高さ（床から64px＝キャラ2つ分）。ぶつからない
+const TARGET_HEIGHT = 64;
 
-const player = { x: 80, y: 20, w: 32, h: 32, vy: 0, isGrounded: false, jumpsLeft: CONFIG.MAX_JUMPS };
+const player = {
+  x: 80,
+  y: 20,
+  w: 32,
+  h: 32,
+  vy: 0,
+  isGrounded: false,
+  jumpsLeft: CONFIG.MAX_JUMPS
+};
+
 const floor = { x: 0, y: 320, w: 640, h: 40 };
 
 const keys = {};
+
 document.addEventListener("keydown", (e) => {
   keys[e.code] = true;
+
   // 跳べる回数が残っていれば跳ぶ（空中でも）
   if (e.code === "Space" && player.jumpsLeft > 0) {
     player.vy = -CONFIG.JUMP_SPEED;
     player.jumpsLeft = player.jumpsLeft - 1;
   }
 });
+
 document.addEventListener("keyup", (e) => {
   keys[e.code] = false;
 });
@@ -33,7 +47,7 @@ function collideWithFloor() {
     player.y = floor.y - player.h;
     player.vy = 0;
     player.isGrounded = true;
-    player.jumpsLeft = CONFIG.MAX_JUMPS;   // 着地したら、跳べる回数を元に戻す
+    player.jumpsLeft = CONFIG.MAX_JUMPS;
   } else {
     player.isGrounded = false;
   }
@@ -46,10 +60,23 @@ function update(dt) {
   if (keys["ArrowLeft"]) {
     player.x = player.x - CONFIG.MOVE_SPEED * dt;
   }
-  // 落ちているとき（vy が＋）だけ、重力を強くする
-  const g = player.vy > 0 ? CONFIG.GRAVITY * CONFIG.FALL_GRAVITY_RATE : CONFIG.GRAVITY;
+
+  // 重力の計算
+  let g = CONFIG.GRAVITY;
+
+  // 落下中なら重力を強くする
+  if (player.vy > 0) {
+    g = CONFIG.GRAVITY * CONFIG.FALL_GRAVITY_RATE;
+  }
+
+  // 下矢印キーを押している間はヒップドロップ
+  if (keys["ArrowDown"] && player.vy > 0) {
+    g = CONFIG.GRAVITY * CONFIG.HIP_DROP_GRAVITY_RATE;
+  }
+
   player.vy = player.vy + g * dt;
   player.y = player.y + player.vy * dt;
+
   collideWithFloor();
 }
 
@@ -58,7 +85,7 @@ function draw() {
   ctx.fillStyle = "#203060";
   ctx.fillRect(floor.x, floor.y, floor.w, floor.h);
 
-  // 目印の線（跳んだ高さをくらべる）
+  // 目印の線
   ctx.fillStyle = "#ff6b6b";
   ctx.fillRect(0, floor.y - TARGET_HEIGHT, canvas.width, 2);
 
@@ -67,7 +94,16 @@ function draw() {
 
   ctx.fillStyle = "#e8eeff";
   ctx.font = "14px monospace";
-  ctx.fillText("vy = " + player.vy.toFixed(0) + "   jumpsLeft = " + player.jumpsLeft, 10, 20);
+  ctx.fillText(
+    "vy = " + player.vy.toFixed(0) +
+    "   jumpsLeft = " + player.jumpsLeft,
+    10, 20
+  );
+
+  // ヒップドロップ中の表示
+  if (keys["ArrowDown"] && player.vy > 0) {
+    ctx.fillText("HIP DROP!", 10, 40);
+  }
 }
 
 let last = performance.now();
