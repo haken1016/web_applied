@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScriptの練習</title>
+</head>
+<body>
+    <p>ページ</p>
+    <script>
+        //一行のコメント
+        /*複数行の
+        コメント*/
+        let num=5;//変数
+        console.log(typeof num);   // ★足す → number（数値）と出る
+        const NUMBER=3;//定数
+        num="文字文字文字";//数値を入れた変数に文字列を入れても、エラーにならない
+        console.log(typeof num);   // ★足す → string（文字列）と出る
+        console.log(`numの中身は ${num} です`);   // → numの中身は 文字文字文字 です
+    </script>
+</body>
+</html>
+
